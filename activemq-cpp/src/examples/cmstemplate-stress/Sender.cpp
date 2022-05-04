@@ -65,6 +65,7 @@ void Sender::SendMessage(string& message, ErrorCode& errorCode) {
         cmsTemplate->send(&messageCreator);
         cmsTemplateMutex.unlock();
         errorCode = CMS_SUCCESS;
+        cerr << "Message sent" << endl;
     } catch (cms::CMSException& ex) {
         cmsTemplateMutex.unlock();
         errorCode = CMS_ERROR_CAUGHT_CMS_EXCEPTION;

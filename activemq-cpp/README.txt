@@ -14,6 +14,10 @@ read the sections that follow for more detailed information.  On Windows
 you will not need the Auto Tools since the library is built using Microsft's
 Visual Studio product.
 
+Aaron's Notes
+    install libaprutil1 libtool-bin libcppunit-dev
+
+
 Tool        Recommended Version
 -------------------------------
 autoconf    >= 2.61

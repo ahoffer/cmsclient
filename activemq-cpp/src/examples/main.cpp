@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <memory>
+#include "getopt.h"
 
 using namespace activemq::core;
 using namespace decaf::util::concurrent;
@@ -48,10 +49,10 @@ using namespace std;
 class HelloWorldProducer : public Runnable {
 private:
 
-    Connection* connection;
-    Session* session;
-    Destination* destination;
-    MessageProducer* producer;
+    Connection *connection;
+    Session *session;
+    Destination *destination;
+    MessageProducer *producer;
     int numMessages;
     bool useTopic;
     bool sessionTransacted;
@@ -59,23 +60,19 @@ private:
 
 private:
 
-    HelloWorldProducer(const HelloWorldProducer&);
-    HelloWorldProducer& operator=(const HelloWorldProducer&);
+    HelloWorldProducer(const HelloWorldProducer &);
+
+    HelloWorldProducer &operator=(const HelloWorldProducer &);
 
 public:
 
-    HelloWorldProducer(const std::string& brokerURI, int numMessages, bool useTopic = false, bool sessionTransacted = false) :
-        connection(NULL),
-        session(NULL),
-        destination(NULL),
-        producer(NULL),
-        numMessages(numMessages),
-        useTopic(useTopic),
-        sessionTransacted(sessionTransacted),
-        brokerURI(brokerURI) {
+    HelloWorldProducer(const std::string &brokerURI, int numMessages, bool useTopic = false,
+                       bool sessionTransacted = false) : connection(NULL), session(NULL), destination(NULL),
+                                                         producer(NULL), numMessages(numMessages), useTopic(useTopic),
+                                                         sessionTransacted(sessionTransacted), brokerURI(brokerURI) {
     }
 
-    virtual ~HelloWorldProducer(){
+    virtual ~HelloWorldProducer() {
         cleanup();
     }
 
@@ -88,11 +85,12 @@ public:
         try {
 
             // Create a ConnectionFactory
-            auto_ptr<ConnectionFactory> connectionFactory(
-                ConnectionFactory::createCMSConnectionFactory(brokerURI));
+            auto_ptr<ConnectionFactory> connectionFactory(ConnectionFactory::createCMSConnectionFactory(brokerURI));
 
             // Create a Connection
             connection = connectionFactory->createConnection();
+
+            // Start the connection
             connection->start();
 
             // Create a Session
@@ -126,7 +124,7 @@ public:
                 producer->send(message.get());
             }
 
-        } catch (CMSException& e) {
+        } catch (CMSException &e) {
             e.printStackTrace();
         }
     }
@@ -138,7 +136,7 @@ private:
         if (connection != NULL) {
             try {
                 connection->close();
-            } catch (cms::CMSException& ex) {
+            } catch (cms::CMSException &ex) {
                 ex.printStackTrace();
             }
         }
@@ -153,24 +151,21 @@ private:
             session = NULL;
             delete connection;
             connection = NULL;
-        } catch (CMSException& e) {
+        } catch (CMSException &e) {
             e.printStackTrace();
         }
     }
 };
 
-class HelloWorldConsumer : public ExceptionListener,
-                           public MessageListener,
-                           public Runnable {
+class HelloWorldConsumer : public ExceptionListener, public MessageListener, public Runnable {
 
 private:
-
     CountDownLatch latch;
     CountDownLatch doneLatch;
-    Connection* connection;
-    Session* session;
-    Destination* destination;
-    MessageConsumer* consumer;
+    Connection *connection;
+    Session *session;
+    Destination *destination;
+    MessageConsumer *consumer;
     long waitMillis;
     bool useTopic;
     bool sessionTransacted;
@@ -178,22 +173,20 @@ private:
 
 private:
 
-    HelloWorldConsumer(const HelloWorldConsumer&);
-    HelloWorldConsumer& operator=(const HelloWorldConsumer&);
+    HelloWorldConsumer(const HelloWorldConsumer &);
+
+    HelloWorldConsumer &operator=(const HelloWorldConsumer &);
 
 public:
 
-    HelloWorldConsumer(const std::string& brokerURI, int numMessages, bool useTopic = false, bool sessionTransacted = false, int waitMillis = 30000) :
-        latch(1),
-        doneLatch(numMessages),
-        connection(NULL),
-        session(NULL),
-        destination(NULL),
-        consumer(NULL),
-        waitMillis(waitMillis),
-        useTopic(useTopic),
-        sessionTransacted(sessionTransacted),
-        brokerURI(brokerURI) {
+    HelloWorldConsumer(const std::string &brokerURI, int numMessages, bool useTopic = false,
+                       bool sessionTransacted = false, int waitMillis = 30000) : latch(1), doneLatch(numMessages),
+                                                                                 connection(NULL), session(NULL),
+                                                                                 destination(NULL), consumer(NULL),
+                                                                                 waitMillis(waitMillis),
+                                                                                 useTopic(useTopic),
+                                                                                 sessionTransacted(sessionTransacted),
+                                                                                 brokerURI(brokerURI) {
     }
 
     virtual ~HelloWorldConsumer() {
@@ -213,8 +206,7 @@ public:
         try {
 
             // Create a ConnectionFactory
-            auto_ptr<ConnectionFactory> connectionFactory(
-                ConnectionFactory::createCMSConnectionFactory(brokerURI));
+            auto_ptr<ConnectionFactory> connectionFactory(ConnectionFactory::createCMSConnectionFactory(brokerURI));
 
             // Create a Connection
             connection = connectionFactory->createConnection();
@@ -249,7 +241,7 @@ public:
             // Wait while asynchronous messages come in.
             doneLatch.await(waitMillis);
 
-        } catch (CMSException& e) {
+        } catch (CMSException &e) {
             // Indicate we are ready for messages.
             latch.countDown();
             e.printStackTrace();
@@ -257,13 +249,13 @@ public:
     }
 
     // Called from the consumer since this class is a registered MessageListener.
-    virtual void onMessage(const Message* message) {
+    virtual void onMessage(const Message *message) {
 
         static int count = 0;
 
         try {
             count++;
-            const TextMessage* textMessage = dynamic_cast<const TextMessage*> (message);
+            const TextMessage *textMessage = dynamic_cast<const TextMessage *> (message);
             string text = "";
 
             if (textMessage != NULL) {
@@ -274,7 +266,7 @@ public:
 
             printf("Message #%d Received: %s\n", count, text.c_str());
 
-        } catch (CMSException& e) {
+        } catch (CMSException &e) {
             e.printStackTrace();
         }
 
@@ -289,7 +281,7 @@ public:
 
     // If something bad happens you see it here as this class is also been
     // registered as an ExceptionListener with the connection.
-    virtual void onException(const CMSException& ex AMQCPP_UNUSED) {
+    virtual void onException(const CMSException &ex AMQCPP_UNUSED) {
         printf("CMS Exception occurred.  Shutting down client.\n");
         ex.printStackTrace();
         exit(1);
@@ -301,7 +293,7 @@ private:
         if (connection != NULL) {
             try {
                 connection->close();
-            } catch (cms::CMSException& ex) {
+            } catch (cms::CMSException &ex) {
                 ex.printStackTrace();
             }
         }
@@ -316,63 +308,31 @@ private:
             session = NULL;
             delete connection;
             connection = NULL;
-        } catch (CMSException& e) {
+        } catch (CMSException &e) {
             e.printStackTrace();
         }
     }
 };
 
-int main(int argc AMQCPP_UNUSED, char* argv[] AMQCPP_UNUSED) {
+int main(int argc, char *argv[] AMQCPP_UNUSED) {
 
+    // Register all the things
     activemq::library::ActiveMQCPP::initializeLibrary();
-    {
+
+    // BROKER URL
+    // For a description of options, see https://activemq.apache.org/components/cms/configuring
+    std::string brokerURI = "tcp://127.0.0.1:5672?username=admin&password=admin";
+
+
+    // Create connection factory
+    std::auto_ptr<cms::ConnectionFactory> connectionFactory(
+            cms::ConnectionFactory::createCMSConnectionFactory(brokerURI));
+
+
+    // TODO: Print out all arguments
     std::cout << "=====================================================\n";
-    std::cout << "Starting the example:" << std::endl;
+    std::cout << "Broker URI: " << brokerURI << std::endl;
     std::cout << "-----------------------------------------------------\n";
-
-
-    // Set the URI to point to the IP Address of your broker.
-    // add any optional params to the url to enable things like
-    // tightMarshalling or tcp logging etc.  See the CMS web site for
-    // a full list of configuration options.
-    //
-    //  http://activemq.apache.org/cms/
-    //
-    // Wire Format Options:
-    // =========================
-    // Use either stomp or openwire, the default ports are different for each
-    //
-    // Examples:
-    //    tcp://127.0.0.1:61616                      default to openwire
-    //    tcp://127.0.0.1:61616?wireFormat=openwire  same as above
-    //    tcp://127.0.0.1:61613?wireFormat=stomp     use stomp instead
-    //
-    // SSL:
-    // =========================
-    // To use SSL you need to specify the location of the trusted Root CA or the
-    // certificate for the broker you want to connect to.  Using the Root CA allows
-    // you to use failover with multiple servers all using certificates signed by
-    // the trusted root.  If using client authentication you also need to specify
-    // the location of the client Certificate.
-    //
-    //     System::setProperty( "decaf.net.ssl.keyStore", "<path>/client.pem" );
-    //     System::setProperty( "decaf.net.ssl.keyStorePassword", "password" );
-    //     System::setProperty( "decaf.net.ssl.trustStore", "<path>/rootCA.pem" );
-    //
-    // The you just specify the ssl transport in the URI, for example:
-    //
-    //     ssl://localhost:61617
-    //
-    std::string brokerURI =
-        "failover:(tcp://localhost:61616"
-//        "?wireFormat=openwire"
-//        "&transport.useInactivityMonitor=false"
-//        "&connection.alwaysSyncSend=true"
-//        "&connection.useAsyncSend=true"
-//        "?transport.commandTracingEnabled=true"
-//        "&transport.tcpTracingEnabled=true"
-//        "&wireFormat.tightEncodingEnabled=true"
-        ")";
 
     //============================================================
     // set to true to use topics instead of queues
@@ -386,7 +346,7 @@ int main(int argc AMQCPP_UNUSED, char* argv[] AMQCPP_UNUSED) {
     long long startTime = System::currentTimeMillis();
 
     HelloWorldProducer producer(brokerURI, numMessages, useTopics);
-        HelloWorldConsumer consumer(brokerURI, numMessages, useTopics, sessionTransacted);
+    HelloWorldConsumer consumer(brokerURI, numMessages, useTopics, sessionTransacted);
 
     // Start the consumer thread.
     Thread consumerThread(&consumer);
@@ -404,18 +364,14 @@ int main(int argc AMQCPP_UNUSED, char* argv[] AMQCPP_UNUSED) {
     consumerThread.join();
 
     long long endTime = System::currentTimeMillis();
-    double totalTime = (double)(endTime - startTime) / 1000.0;
+    double totalTime = (double) (endTime - startTime) / 1000.0;
 
     consumer.close();
     producer.close();
 
     std::cout << "Time to completion = " << totalTime << " seconds." << std::endl;
     std::cout << "-----------------------------------------------------\n";
-    std::cout << "Finished with the example." << std::endl;
-    std::cout << "=====================================================\n";
 
-    }
-    activemq::library::ActiveMQCPP::shutdownLibrary();
+    // TODO The call to shutdownLibrary was causing a seg fault.
+    //activemq::library::ActiveMQCPP::shutdownLibrary();
 }
-
-// END SNIPPET: demo
